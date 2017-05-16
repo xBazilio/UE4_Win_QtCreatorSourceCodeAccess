@@ -1,0 +1,27 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "Qt Creator Source Code Access",
+	"Description": "Allows access to source code in Qt Creator.",
+	"Category": "Programming",
+	"CreatedBy": "Vasiliy Rumyantsev",
+	"CreatedByURL": "https://github.com/xBazilio/QtCreatorWinSourceCodeAccess",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": false,
+	"IsBetaVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "QtCreatorSourceCodeAccess",
+			"Type": "Developer",
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [
+				"Win64",
+				"Win32"
+			]
+		}
+	]
+}
