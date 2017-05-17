@@ -6,14 +6,6 @@ public class QtCreatorSourceCodeAccess : ModuleRules
 {
 	public QtCreatorSourceCodeAccess(TargetInfo Target)
 	{
-		
-		PublicIncludePaths.AddRange(
-			new string[] {
-				"QtCreatorSourceCodeAccess/Public"
-			}
-		);
-				
-		
 		PrivateIncludePaths.AddRange(
 			new string[] {
 				"QtCreatorSourceCodeAccess/Private"
