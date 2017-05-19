@@ -33,6 +33,9 @@ private:
 	/** Check if QtCreator is already running */
 	bool IsIDERunning();
 
+	/** Chek if Qt Creator is present in system **/
+	bool CanRunQtCreator(FString& IDEPath) const;
+
 	/** Gets solution path */
 	FString GetSolutionPath() const;
 };

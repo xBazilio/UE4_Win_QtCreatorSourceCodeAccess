@@ -3,15 +3,18 @@
 #include "QtCreatorSourceCodeAccessHeader.h"
 #include "QtCreatorSourceCodeAccessor.h"
 #include "DesktopPlatformModule.h"
+#include "FileManagerGeneric.h"
+#include "Logging/MessageLog.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogQtCreatorAccessor, Log, All)
 
 #define LOCTEXT_NAMESPACE "QtCreatorSourceCodeAccessor"
+#define QT_PATH "c:/Qt"
 
 bool FQtCreatorSourceCodeAccessor::CanAccessSourceCode() const
 {
-	// TODO implement checking that Qt Creator is present in system
-	return true;
+	FString IDEPath;
+	return CanRunQtCreator(IDEPath);
 }
 
 FName FQtCreatorSourceCodeAccessor::GetFName() const
@@ -31,6 +34,12 @@ FText FQtCreatorSourceCodeAccessor::GetDescriptionText() const
 
 bool FQtCreatorSourceCodeAccessor::OpenSolution()
 {
+	UE_LOG(LogQtCreatorAccessor, Warning, TEXT("FQtCreatorSourceCodeAccessor::OpenSolution()"));
+	FMessageLog("dfdfd").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::OpenSolution()")));
+	// c:\Qt\Qt5.8.0\Tools\QtCreator\bin\qtcreator.exe d:\Bazilio\unreal\Projects\QtCreatorPlugin\Intermediate\ProjectFiles\QtCreatorPlugin.pro
+
+	//http://doc.qt.io/qtcreator/creator-cli.html
+
 	if (IsIDERunning())
 	{
 		// use qdbus to open the project within session?
@@ -38,37 +47,45 @@ bool FQtCreatorSourceCodeAccessor::OpenSolution()
 		return false;
 	}
 
-	FString Solution = GetSolutionPath();
+	FString Solution = FPaths::GetPath(GetSolutionPath());
 	FString IDEPath;
 	// TODO implement opening Qt Creator
 	STUBBED("OpenSolution: Lounch Qt Creator");
 
-//	if (!CanRunKDevelop(IDEPath))
-//	{
-//		UE_LOG(LogKDevelopAccessor, Warning, TEXT("FKDevelopSourceCodeAccessor::OpenSourceFiles: cannot find kdevelop binary"));
-//		return false;
-//	}
+	if (!CanRunQtCreator(IDEPath))
+	{
+		UE_LOG(LogQtCreatorAccessor, Warning, TEXT("FQtCreatorSourceCodeAccessor::OpenSourceFiles: cannot find Qt Creator"));
+		return false;
+	}
 
-//	FProcHandle Proc = FPlatformProcess::CreateProc(*IDEPath, *Solution, true, false, false, nullptr, 0, nullptr, nullptr);
-//	if (Proc.IsValid())
-//	{
-//		FPlatformProcess::CloseProc(Proc);
-//		return true;
-//	}
+	FProcHandle Proc = FWindowsPlatformProcess::CreateProc(*IDEPath, *Solution, true, false, false, nullptr, 0, nullptr, nullptr);
+	if (Proc.IsValid())
+	{
+		FPlatformProcess::CloseProc(Proc);
+		return true;
+	}
 	return false;
 }
 
 bool FQtCreatorSourceCodeAccessor::OpenFileAtLine(const FString& FullPath, int32 LineNumber, int32 ColumnNumber)
 {
+	UE_LOG(LogQtCreatorAccessor, Warning, TEXT("FQtCreatorSourceCodeAccessor::OpenFileAtLine"));
+	FMessageLog("dfdfd").Error(FText::FromString(FullPath));
+	FMessageLog("dfdfd").Error(FText::FromString(FString::FromInt(LineNumber)));
+	FMessageLog("dfdfd").Error(FText::FromString(FString::FromInt(ColumnNumber)));
 	STUBBED("FQtCreatorSourceCodeAccessor::OpenFileAtLine");
 	return false;
 }
 
 bool FQtCreatorSourceCodeAccessor::OpenSourceFiles(const TArray<FString>& AbsoluteSourcePaths)
 {
+	FMessageLog("dfdfd").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::OpenSourceFiles")));
+	for (auto SourceFile : AbsoluteSourcePaths)
+	{
+		FMessageLog("dfdfd").Error(FText::FromString(SourceFile));
+	}
 	if (IsIDERunning())
 	{
-		// use qdbus
 		STUBBED("OpenSourceFiles: QtCreator is running");
 		return false;
 	}
@@ -95,8 +112,44 @@ void FQtCreatorSourceCodeAccessor::Tick(const float DeltaTime)
 
 bool FQtCreatorSourceCodeAccessor::IsIDERunning()
 {
+	// http://doc.qt.io/qtcreator/creator-cli.html
+	// tasklist qtcreator.exe
+
 	// TODO implement IsIDERunning
 	STUBBED("IsIDERunning: Check if QtCreator is running?");
+	return false;
+}
+
+bool FQtCreatorSourceCodeAccessor::CanRunQtCreator(FString& IDEPath) const
+{
+	// assuming Qt Creator installed in the default path
+	if (!FPaths::DirectoryExists(TEXT(QT_PATH))) return false;
+
+	class FQtVisitor : public IPlatformFile::FDirectoryVisitor
+	{
+	public:
+		FString QtPath;
+		FQtVisitor()
+		{
+		}
+		virtual bool Visit(const TCHAR* Filename, bool bIsDirectory)
+		{
+			if (bIsDirectory)
+			{
+				QtPath = FString(Filename);
+				return false; // stop searching
+			}
+			return true; // continue searching
+		}
+	};
+	FQtVisitor QtVistor;
+	FFileManagerGeneric::Get().IterateDirectory(TEXT(QT_PATH), QtVistor);
+	if (!QtVistor.QtPath.IsEmpty())
+	{
+		IDEPath = FPaths::Combine(QtVistor.QtPath, FString("Tools/QtCreator/bin/qtcreator.exe"));
+		return FPaths::FileExists(IDEPath);
+	}
+
 	return false;
 }
 
