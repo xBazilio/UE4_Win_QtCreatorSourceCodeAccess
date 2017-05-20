@@ -22,6 +22,8 @@
 #include "DesktopPlatformModule.h"
 #include "FileManagerGeneric.h"
 #include "Logging/MessageLog.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 DEFINE_LOG_CATEGORY_STATIC(LogQtCreatorAccessor, Log, All)
 
@@ -61,7 +63,7 @@ bool FQtCreatorSourceCodeAccessor::OpenSolution()
 		return false;
 	}
 
-	FString Solution = FPaths::GetPath(GetSolutionPath());
+	FString Solution = FPaths::Combine(FPaths::GetPath(GetSolutionPath()), TEXT("Intermediate/ProjectFiles"));
 	FString IDEPath;
 
 	if (!CanRunQtCreator(IDEPath))
@@ -81,6 +83,8 @@ bool FQtCreatorSourceCodeAccessor::OpenSolution()
 
 bool FQtCreatorSourceCodeAccessor::OpenFileAtLine(const FString& FullPath, int32 LineNumber, int32 ColumnNumber)
 {
+	if (!OpenSolution()) return false;
+
 	UE_LOG(LogQtCreatorAccessor, Warning, TEXT("FQtCreatorSourceCodeAccessor::OpenFileAtLine"));
 	FMessageLog("dfdfd").Error(FText::FromString(FullPath));
 	STUBBED("FQtCreatorSourceCodeAccessor::OpenFileAtLine");
@@ -89,6 +93,7 @@ bool FQtCreatorSourceCodeAccessor::OpenFileAtLine(const FString& FullPath, int32
 
 bool FQtCreatorSourceCodeAccessor::OpenSourceFiles(const TArray<FString>& AbsoluteSourcePaths)
 {
+	if (!OpenSolution()) return false;
 	FMessageLog("dfdfd").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::OpenSourceFiles")));
 	for (auto SourceFile : AbsoluteSourcePaths)
 	{
@@ -122,12 +127,22 @@ void FQtCreatorSourceCodeAccessor::Tick(const float DeltaTime)
 
 bool FQtCreatorSourceCodeAccessor::IsIDERunning()
 {
-	// http://doc.qt.io/qtcreator/creator-cli.html
-	// tasklist qtcreator.exe
+	uint8 OutLinesCount{0};
+	FILE* pipe = _popen("tasklist /FI \"IMAGENAME eq qtcreator.exe\" /FO LIST", "r");
+	if (!pipe) return false; // we can't continue in this case
+	char buffer[1000];
+	while (fgets(buffer, sizeof(buffer)-1, pipe) != NULL)
+	{
+		OutLinesCount++;
+	}
+	_pclose(pipe);
 
-	// TODO implement IsIDERunning
-	STUBBED("IsIDERunning: Check if QtCreator is running?");
-	return false;
+	FMessageLog("dfdfd").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::IsIDERunning()")));
+	FMessageLog("dfdfd").Error(FText::FromString(FString::FromInt(OutLinesCount)));
+
+	// TODO hide popping cmd windows
+
+	return OutLinesCount > 1;
 }
 
 bool FQtCreatorSourceCodeAccessor::CanRunQtCreator(FString& IDEPath) const
