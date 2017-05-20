@@ -1,5 +1,22 @@
-#pragma once
-
+// Implementation of ISourceCodeAccessor
+/*
+ * Copyright (C) 2017 Vasiliy Rumyantsev
+ *
+ * This file is part of QtCreatorSourceCodeAccess, windows version.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #include "QtCreatorSourceCodeAccessHeader.h"
 #include "QtCreatorSourceCodeAccessor.h"
 #include "DesktopPlatformModule.h"
@@ -29,28 +46,23 @@ FText FQtCreatorSourceCodeAccessor::GetNameText() const
 
 FText FQtCreatorSourceCodeAccessor::GetDescriptionText() const
 {
-	return LOCTEXT("QtCreatorDisplayDesc", "Open source code files in Qt Creator");
+	return LOCTEXT("QtCreatorDisplayDesc", "Create and write source code with Qt Creator");
 }
 
 bool FQtCreatorSourceCodeAccessor::OpenSolution()
 {
-	UE_LOG(LogQtCreatorAccessor, Warning, TEXT("FQtCreatorSourceCodeAccessor::OpenSolution()"));
 	FMessageLog("dfdfd").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::OpenSolution()")));
-	// c:\Qt\Qt5.8.0\Tools\QtCreator\bin\qtcreator.exe d:\Bazilio\unreal\Projects\QtCreatorPlugin\Intermediate\ProjectFiles\QtCreatorPlugin.pro
-
 	//http://doc.qt.io/qtcreator/creator-cli.html
 
 	if (IsIDERunning())
 	{
-		// use qdbus to open the project within session?
+		// attach to the pid
 		STUBBED("OpenSolution: if IsIDERunning bring it to the foreground");
 		return false;
 	}
 
 	FString Solution = FPaths::GetPath(GetSolutionPath());
 	FString IDEPath;
-	// TODO implement opening Qt Creator
-	STUBBED("OpenSolution: Lounch Qt Creator");
 
 	if (!CanRunQtCreator(IDEPath))
 	{
@@ -71,8 +83,6 @@ bool FQtCreatorSourceCodeAccessor::OpenFileAtLine(const FString& FullPath, int32
 {
 	UE_LOG(LogQtCreatorAccessor, Warning, TEXT("FQtCreatorSourceCodeAccessor::OpenFileAtLine"));
 	FMessageLog("dfdfd").Error(FText::FromString(FullPath));
-	FMessageLog("dfdfd").Error(FText::FromString(FString::FromInt(LineNumber)));
-	FMessageLog("dfdfd").Error(FText::FromString(FString::FromInt(ColumnNumber)));
 	STUBBED("FQtCreatorSourceCodeAccessor::OpenFileAtLine");
 	return false;
 }
