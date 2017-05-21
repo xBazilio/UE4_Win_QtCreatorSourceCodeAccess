@@ -51,4 +51,11 @@ private:
 
 	/** Gets solution path */
 	FString GetSolutionPath() const;
+
+	bool OpenFilesInQtCreator(
+		const TArray<FString>& FilePaths,
+		const FString& FilePath,
+		int32 LineNumber = 0,
+		int32 ColumnNumber = 0
+	);
 };

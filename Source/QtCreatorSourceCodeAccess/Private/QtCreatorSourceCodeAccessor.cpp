@@ -29,6 +29,7 @@ DEFINE_LOG_CATEGORY_STATIC(LogQtCreatorAccessor, Log, All)
 
 #define LOCTEXT_NAMESPACE "QtCreatorSourceCodeAccessor"
 #define QT_PATH "c:/Qt"
+#define	SOLUTION_SUBPATH "Intermediate/ProjectFiles"
 
 bool FQtCreatorSourceCodeAccessor::CanAccessSourceCode() const
 {
@@ -54,17 +55,14 @@ FText FQtCreatorSourceCodeAccessor::GetDescriptionText() const
 bool FQtCreatorSourceCodeAccessor::OpenSolution()
 {
 	FMessageLog("dfdfd").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::OpenSolution()")));
-	//http://doc.qt.io/qtcreator/creator-cli.html
 
 	int32 PID;
 	if (IsIDERunning(PID))
 	{
-		// attach to the pid
-		STUBBED("OpenSolution: if IsIDERunning bring it to the foreground");
-		return false;
+		return true;
 	}
 
-	FString Solution = FPaths::Combine(FPaths::GetPath(GetSolutionPath()), TEXT("Intermediate/ProjectFiles"));
+	FString Solution = FPaths::Combine(FPaths::GetPath(GetSolutionPath()), TEXT(SOLUTION_SUBPATH));
 	FString IDEPath;
 
 	if (!CanRunQtCreator(IDEPath))
@@ -77,6 +75,8 @@ bool FQtCreatorSourceCodeAccessor::OpenSolution()
 	if (Proc.IsValid())
 	{
 		FPlatformProcess::CloseProc(Proc);
+		// Double IDE workaround
+		while (!IsIDERunning(PID)) { Sleep(100); }
 		return true;
 	}
 	return false;
@@ -84,41 +84,33 @@ bool FQtCreatorSourceCodeAccessor::OpenSolution()
 
 bool FQtCreatorSourceCodeAccessor::OpenFileAtLine(const FString& FullPath, int32 LineNumber, int32 ColumnNumber)
 {
+	// Qt Creator should be opened to open files in context of the solution
 	if (!OpenSolution()) return false;
 
-	UE_LOG(LogQtCreatorAccessor, Warning, TEXT("FQtCreatorSourceCodeAccessor::OpenFileAtLine"));
 	FMessageLog("dfdfd").Error(FText::FromString(FullPath));
-	STUBBED("FQtCreatorSourceCodeAccessor::OpenFileAtLine");
-	return false;
+	TArray<FString> Stub;
+	return OpenFilesInQtCreator(Stub, FullPath, LineNumber, ColumnNumber);
 }
 
 bool FQtCreatorSourceCodeAccessor::OpenSourceFiles(const TArray<FString>& AbsoluteSourcePaths)
 {
+	// Qt Creator should be opened to open files in context of the solution
 	if (!OpenSolution()) return false;
-	FMessageLog("dfdfd").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::OpenSourceFiles")));
-	for (auto SourceFile : AbsoluteSourcePaths)
-	{
-		FMessageLog("dfdfd").Error(FText::FromString(SourceFile));
-	}
-	int32 PID;
-	if (IsIDERunning(PID))
-	{
-		STUBBED("OpenSourceFiles: QtCreator is running");
-		return false;
-	}
 
-	STUBBED("FQtCreatorSourceCodeAccessor::OpenSourceFiles");
-	return false;
+	FMessageLog("dfdfd").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::OpenSourceFiles")));
+	return OpenFilesInQtCreator(AbsoluteSourcePaths, FString(""));
 }
 
 bool FQtCreatorSourceCodeAccessor::AddSourceFiles(const TArray<FString>& AbsoluteSourcePaths, const TArray<FString>& AvailableModules)
 {
+	FMessageLog("dfdfd").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::AddSourceFiles")));
 	STUBBED("FQtCreatorSourceCodeAccessor::AddSourceFiles");
 	return false;
 }
 
 bool FQtCreatorSourceCodeAccessor::SaveAllOpenDocuments() const
 {
+	FMessageLog("dfdfd").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::SaveAllOpenDocuments")));
 	STUBBED("FQtCreatorSourceCodeAccessor::SaveAllOpenDocuments");
 	return false;
 }
@@ -205,6 +197,57 @@ FString FQtCreatorSourceCodeAccessor::GetSolutionPath() const
 		}
 	}
 	return CachedSolutionPath;
+}
+
+bool FQtCreatorSourceCodeAccessor::OpenFilesInQtCreator(
+		const TArray<FString>& FilePaths,
+		const FString& FilePath,
+		int32 LineNumber,
+		int32 ColumnNumber
+)
+{
+	if (FilePaths.Num() == 0 && FilePath.IsEmpty()) return false;
+
+
+	FString IDEPath;
+	if (!CanRunQtCreator(IDEPath)) return false;
+	int32 PID;
+	if (!IsIDERunning(PID)) return false;
+
+	FString IDEArguments;
+
+	// PID
+	IDEArguments.Append(" -pid ").Append(FString::FromInt(PID)).Append(" ");
+	// Solution path
+	IDEArguments.Append(FPaths::Combine(FPaths::GetPath(GetSolutionPath()), TEXT(SOLUTION_SUBPATH)));
+
+	// File path
+	if (FilePaths.Num() > 0)
+	{
+		for (auto OneFile : FilePaths)
+		{
+			IDEArguments.Append(" ").Append(OneFile);
+		}
+	}
+	else
+	{
+		IDEArguments.Append(" ")
+				// space in path workaround
+				.Append(FString("\"")).Append(FilePath).Append(FString("\""))
+				.Append(":").Append(FString::FromInt(LineNumber))
+				.Append(":").Append(FString::FromInt(ColumnNumber));
+	}
+	FMessageLog("dfdfd").Error(FText::FromString(TEXT("Private FQtCreatorSourceCodeAccessor::OpenFilesInQtCreator()")));
+	FMessageLog("dfdfd").Error(FText::FromString(IDEPath));
+	FMessageLog("dfdfd").Error(FText::FromString(IDEArguments));
+
+	FProcHandle Proc = FWindowsPlatformProcess::CreateProc(*IDEPath, *IDEArguments, true, false, false, nullptr, 0, nullptr, nullptr);
+	if (Proc.IsValid())
+	{
+		FPlatformProcess::CloseProc(Proc);
+		return true;
+	}
+	return false;
 }
 
 #undef LOCTEXT_NAMESPACE
