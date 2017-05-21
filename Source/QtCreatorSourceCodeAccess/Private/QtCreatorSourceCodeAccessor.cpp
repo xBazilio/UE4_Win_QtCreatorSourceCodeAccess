@@ -22,8 +22,8 @@
 #include "DesktopPlatformModule.h"
 #include "FileManagerGeneric.h"
 #include "Logging/MessageLog.h"
-#include <stdio.h>
-#include <stdlib.h>
+#include "Windows/WindowsHWrapper.h"
+#include <TlHelp32.h>
 
 DEFINE_LOG_CATEGORY_STATIC(LogQtCreatorAccessor, Log, All)
 
@@ -56,7 +56,8 @@ bool FQtCreatorSourceCodeAccessor::OpenSolution()
 	FMessageLog("dfdfd").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::OpenSolution()")));
 	//http://doc.qt.io/qtcreator/creator-cli.html
 
-	if (IsIDERunning())
+	int32 PID;
+	if (IsIDERunning(PID))
 	{
 		// attach to the pid
 		STUBBED("OpenSolution: if IsIDERunning bring it to the foreground");
@@ -99,7 +100,8 @@ bool FQtCreatorSourceCodeAccessor::OpenSourceFiles(const TArray<FString>& Absolu
 	{
 		FMessageLog("dfdfd").Error(FText::FromString(SourceFile));
 	}
-	if (IsIDERunning())
+	int32 PID;
+	if (IsIDERunning(PID))
 	{
 		STUBBED("OpenSourceFiles: QtCreator is running");
 		return false;
@@ -125,24 +127,38 @@ void FQtCreatorSourceCodeAccessor::Tick(const float DeltaTime)
 {
 }
 
-bool FQtCreatorSourceCodeAccessor::IsIDERunning()
+bool FQtCreatorSourceCodeAccessor::IsIDERunning(int32& PID)
 {
-	uint8 OutLinesCount{0};
-	FILE* pipe = _popen("tasklist /FI \"IMAGENAME eq qtcreator.exe\" /FO LIST", "r");
-	if (!pipe) return false; // we can't continue in this case
-	char buffer[1000];
-	while (fgets(buffer, sizeof(buffer)-1, pipe) != NULL)
+	PID = 0;
+
+	HANDLE ProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	if (ProcessSnap == INVALID_HANDLE_VALUE) return false;
+
+	PROCESSENTRY32 PE32;
+	PE32.dwSize = sizeof(PROCESSENTRY32);
+	if(!Process32First(ProcessSnap, &PE32))
 	{
-		OutLinesCount++;
+		CloseHandle(ProcessSnap);
+		return false;
 	}
-	_pclose(pipe);
+
+	do
+	{
+		FString ExeFile = FString(PE32.szExeFile);
+		if (ExeFile.Equals(TEXT("qtcreator.exe")))
+		{
+			PID = static_cast<int32>(PE32.th32ProcessID);
+			break;
+		}
+	}
+	while (Process32Next(ProcessSnap, &PE32));
+
+	CloseHandle(ProcessSnap);
 
 	FMessageLog("dfdfd").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::IsIDERunning()")));
-	FMessageLog("dfdfd").Error(FText::FromString(FString::FromInt(OutLinesCount)));
+	FMessageLog("dfdfd").Error(FText::FromString(FString::FromInt(PID)));
 
-	// TODO hide popping cmd windows
-
-	return OutLinesCount > 1;
+	return PID > 0;
 }
 
 bool FQtCreatorSourceCodeAccessor::CanRunQtCreator(FString& IDEPath) const

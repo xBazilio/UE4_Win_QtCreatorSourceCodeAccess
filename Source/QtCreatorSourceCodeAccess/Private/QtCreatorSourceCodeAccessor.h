@@ -44,7 +44,7 @@ private:
 	mutable FString CachedSolutionPath;
 
 	/** Checks if QtCreator is already running */
-	bool IsIDERunning();
+	bool IsIDERunning(int32& PID);
 
 	/** Checks if Qt Creator is present in the system, stores found path in given parameter **/
 	bool CanRunQtCreator(FString& IDEPath) const;
