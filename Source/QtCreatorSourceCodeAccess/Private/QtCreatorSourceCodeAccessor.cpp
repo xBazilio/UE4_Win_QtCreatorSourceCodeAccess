@@ -104,6 +104,17 @@ bool FQtCreatorSourceCodeAccessor::OpenSourceFiles(const TArray<FString>& Absolu
 bool FQtCreatorSourceCodeAccessor::AddSourceFiles(const TArray<FString>& AbsoluteSourcePaths, const TArray<FString>& AvailableModules)
 {
 	FMessageLog("dfdfd").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::AddSourceFiles")));
+
+	// separate AbsoluteSourcePaths for headers and sources
+	// read .pro file in buffer, separate HEADERS and SOURCES bufers
+	// add headers to HEADERS, sources to SOURCES
+	// rewrite .pro file
+
+	for (const auto AbsoluteSourcePath : AbsoluteSourcePaths)
+	{
+		FMessageLog("dfdfd").Error(FText::FromString(AbsoluteSourcePath));
+	}
+
 	STUBBED("FQtCreatorSourceCodeAccessor::AddSourceFiles");
 	return false;
 }
