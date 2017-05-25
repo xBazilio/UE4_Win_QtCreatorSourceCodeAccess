@@ -21,6 +21,7 @@
 #include "QtCreatorSourceCodeAccessor.h"
 #include "DesktopPlatformModule.h"
 #include "FileManagerGeneric.h"
+#include "Misc/FileHelper.h"
 #include "Logging/MessageLog.h"
 #include "Windows/WindowsHWrapper.h"
 #include <TlHelp32.h>
@@ -104,6 +105,28 @@ bool FQtCreatorSourceCodeAccessor::OpenSourceFiles(const TArray<FString>& Absolu
 bool FQtCreatorSourceCodeAccessor::AddSourceFiles(const TArray<FString>& AbsoluteSourcePaths, const TArray<FString>& AvailableModules)
 {
 	FMessageLog("dfdfd").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::AddSourceFiles")));
+
+	// Path to .pro file
+	FString ProFile = FPaths::Combine(
+			FPaths::GetPath(GetSolutionPath()),
+			FString("Intermediate/ProjectFiles/").Append(FPaths::GetBaseFilename(GetSolutionPath()).Append(".pro"))
+	);
+	if (!FPaths::FileExists(ProFile)) return false;
+	FMessageLog("dfdfd").Error(FText::FromString(ProFile));
+
+	FString WholeFile;
+	FFileHelper::LoadFileToString(WholeFile, ProFile.GetCharArray().GetData());
+	FMessageLog("dfdfd").Error(FText::FromString(WholeFile));
+
+	TArray<FString> FileAsArray;
+	TCHAR Delim = '\n';
+	WholeFile.ParseIntoArray(FileAsArray, &Delim, false);
+
+	for (const auto Strings : FileAsArray)
+	{
+		FMessageLog("dfdfd").Error(FText::FromString(Strings));
+	}
+
 
 	// separate AbsoluteSourcePaths for headers and sources
 	// read .pro file in buffer, separate HEADERS and SOURCES bufers
