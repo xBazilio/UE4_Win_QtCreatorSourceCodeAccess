@@ -55,7 +55,7 @@ FText FQtCreatorSourceCodeAccessor::GetDescriptionText() const
 
 bool FQtCreatorSourceCodeAccessor::OpenSolution()
 {
-	FMessageLog("dfdfd").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::OpenSolution()")));
+	FMessageLog("DevLog").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::OpenSolution()")));
 
 	int32 PID;
 	if (IsIDERunning(PID))
@@ -77,6 +77,7 @@ bool FQtCreatorSourceCodeAccessor::OpenSolution()
 	{
 		FPlatformProcess::CloseProc(Proc);
 		// Double IDE workaround
+		// TODO: can't understand if it helps...
 		while (!IsIDERunning(PID)) { Sleep(100); }
 		return true;
 	}
@@ -88,7 +89,6 @@ bool FQtCreatorSourceCodeAccessor::OpenFileAtLine(const FString& FullPath, int32
 	// Qt Creator should be opened to open files in context of the solution
 	if (!OpenSolution()) return false;
 
-	FMessageLog("dfdfd").Error(FText::FromString(FullPath));
 	TArray<FString> Stub;
 	return OpenFilesInQtCreator(Stub, FullPath, LineNumber, ColumnNumber);
 }
@@ -98,53 +98,105 @@ bool FQtCreatorSourceCodeAccessor::OpenSourceFiles(const TArray<FString>& Absolu
 	// Qt Creator should be opened to open files in context of the solution
 	if (!OpenSolution()) return false;
 
-	FMessageLog("dfdfd").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::OpenSourceFiles")));
+	FMessageLog("DevLog").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::OpenSourceFiles")));
 	return OpenFilesInQtCreator(AbsoluteSourcePaths, FString(""));
 }
 
 bool FQtCreatorSourceCodeAccessor::AddSourceFiles(const TArray<FString>& AbsoluteSourcePaths, const TArray<FString>& AvailableModules)
 {
-	FMessageLog("dfdfd").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::AddSourceFiles")));
+	FMessageLog("DevLog").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::AddSourceFiles")));
 
-	// Path to .pro file
-	FString ProFile = FPaths::Combine(
+	// Path to the .pro file
+	FString ProFilePath = FPaths::Combine(
 			FPaths::GetPath(GetSolutionPath()),
 			FString("Intermediate/ProjectFiles/").Append(FPaths::GetBaseFilename(GetSolutionPath()).Append(".pro"))
 	);
-	if (!FPaths::FileExists(ProFile)) return false;
-	FMessageLog("dfdfd").Error(FText::FromString(ProFile));
+	if (!FPaths::FileExists(ProFilePath)) return false;
 
-	FString WholeFile;
-	FFileHelper::LoadFileToString(WholeFile, ProFile.GetCharArray().GetData());
-	FMessageLog("dfdfd").Error(FText::FromString(WholeFile));
-
-	TArray<FString> FileAsArray;
-	TCHAR Delim = '\n';
-	WholeFile.ParseIntoArray(FileAsArray, &Delim, false);
-
-	for (const auto Strings : FileAsArray)
+	// split AbsoluteSourcePaths to headers and sources
+	TArray<FString> Headers;
+	TArray<FString> Sources;
+	for (FString AbsoluteSourcePath : AbsoluteSourcePaths)
 	{
-		FMessageLog("dfdfd").Error(FText::FromString(Strings));
+		AbsoluteSourcePath.RemoveFromStart(FPaths::GetPath(GetSolutionPath()), ESearchCase::IgnoreCase);
+		AbsoluteSourcePath = FString("../..").Append(AbsoluteSourcePath);
+		if (AbsoluteSourcePath.Find(FString(".h"), ESearchCase::IgnoreCase, ESearchDir::FromEnd) == AbsoluteSourcePath.Len() - 2)
+		{
+			Headers.Add(AbsoluteSourcePath);
+		}
+		if (AbsoluteSourcePath.Find(FString(".cpp"), ESearchCase::IgnoreCase, ESearchDir::FromEnd) == AbsoluteSourcePath.Len() - 4)
+		{
+			Sources.Add(AbsoluteSourcePath);
+		}
 	}
 
+	// Read the .pro file into FString
+	FString ProFileAsString;
+	FFileHelper::LoadFileToString(ProFileAsString, ProFilePath.GetCharArray().GetData());
+	// Fix newline characters
+	ProFileAsString.Replace(*FString("\r\n"), *FString("\n"), ESearchCase::CaseSensitive);
 
-	// separate AbsoluteSourcePaths for headers and sources
-	// read .pro file in buffer, separate HEADERS and SOURCES bufers
-	// add headers to HEADERS, sources to SOURCES
+	// Split .pro string into array
+	TArray<FString> ProFileAsArray;
+	ProFileAsString.ParseIntoArray(ProFileAsArray, *FString("\n"), false);
+
+	// Read .pro file line by line and generate new content with new files added
+	FString NewProFileAsString;
+	bool HEADERS_Found{false};
+	bool SOURCES_Found{false};
+	for (FString ProString : ProFileAsArray)
+	{
+		// flag that we found HEADERS list
+		if (ProString.Contains(TEXT("HEADERS += "), ESearchCase::CaseSensitive))
+		{
+			HEADERS_Found = true;
+			// we not at SOURCES list any more
+			SOURCES_Found = false;
+		}
+		// flag that we found SOURCES list
+		if (ProString.Contains(TEXT("SOURCES += "), ESearchCase::CaseSensitive))
+		{
+			SOURCES_Found = true;
+			// we not at HEADERS list any more
+			HEADERS_Found = false;
+		}
+
+		if (ProString.TrimTrailing().IsEmpty())
+		{
+			if (HEADERS_Found)
+			{
+				// add header to the HEADERS list
+				for (FString Header : Headers)
+				{
+					NewProFileAsString.Append(FString(" \\\n    ")).Append(Header).Append(FString("\n"));
+				}
+			}
+			if (SOURCES_Found)
+			{
+				// add source to the SOURCES list
+				for (FString Source : Sources)
+				{
+					NewProFileAsString.Append(FString(" \\\n    ")).Append(Source).Append(FString("\n"));
+				}
+			}
+		}
+
+		if (!NewProFileAsString.IsEmpty())
+		{
+			NewProFileAsString.Append(FString("\n"));
+		}
+		NewProFileAsString.Append(ProString);
+	}
+
 	// rewrite .pro file
+	FFileHelper::SaveStringToFile(NewProFileAsString, *ProFilePath);
 
-	for (const auto AbsoluteSourcePath : AbsoluteSourcePaths)
-	{
-		FMessageLog("dfdfd").Error(FText::FromString(AbsoluteSourcePath));
-	}
-
-	STUBBED("FQtCreatorSourceCodeAccessor::AddSourceFiles");
-	return false;
+	return true;
 }
 
 bool FQtCreatorSourceCodeAccessor::SaveAllOpenDocuments() const
 {
-	FMessageLog("dfdfd").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::SaveAllOpenDocuments")));
+	FMessageLog("DevLog").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::SaveAllOpenDocuments")));
 	STUBBED("FQtCreatorSourceCodeAccessor::SaveAllOpenDocuments");
 	return false;
 }
@@ -181,8 +233,8 @@ bool FQtCreatorSourceCodeAccessor::IsIDERunning(int32& PID)
 
 	CloseHandle(ProcessSnap);
 
-	FMessageLog("dfdfd").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::IsIDERunning()")));
-	FMessageLog("dfdfd").Error(FText::FromString(FString::FromInt(PID)));
+	FMessageLog("DevLog").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::IsIDERunning()")));
+	FMessageLog("DevLog").Error(FText::FromString(FString::FromInt(PID)));
 
 	return PID > 0;
 }
@@ -271,9 +323,9 @@ bool FQtCreatorSourceCodeAccessor::OpenFilesInQtCreator(
 				.Append(":").Append(FString::FromInt(LineNumber))
 				.Append(":").Append(FString::FromInt(ColumnNumber));
 	}
-	FMessageLog("dfdfd").Error(FText::FromString(TEXT("Private FQtCreatorSourceCodeAccessor::OpenFilesInQtCreator()")));
-	FMessageLog("dfdfd").Error(FText::FromString(IDEPath));
-	FMessageLog("dfdfd").Error(FText::FromString(IDEArguments));
+	FMessageLog("DevLog").Error(FText::FromString(TEXT("Private FQtCreatorSourceCodeAccessor::OpenFilesInQtCreator()")));
+	FMessageLog("DevLog").Error(FText::FromString(IDEPath));
+	FMessageLog("DevLog").Error(FText::FromString(IDEArguments));
 
 	FProcHandle Proc = FWindowsPlatformProcess::CreateProc(*IDEPath, *IDEArguments, true, false, false, nullptr, 0, nullptr, nullptr);
 	if (Proc.IsValid())
