@@ -77,8 +77,7 @@ bool FQtCreatorSourceCodeAccessor::OpenSolution()
 	{
 		FPlatformProcess::CloseProc(Proc);
 		// Double IDE workaround
-		// TODO: can't understand if it helps...
-		while (!IsIDERunning(PID)) { Sleep(100); }
+		FPlatformProcess::Sleep(1);
 		return true;
 	}
 	return false;
@@ -150,14 +149,14 @@ bool FQtCreatorSourceCodeAccessor::AddSourceFiles(const TArray<FString>& Absolut
 		if (ProString.Contains(TEXT("HEADERS += "), ESearchCase::CaseSensitive))
 		{
 			HEADERS_Found = true;
-			// we not at SOURCES list any more
+			// we're not at SOURCES list any more
 			SOURCES_Found = false;
 		}
 		// flag that we found SOURCES list
 		if (ProString.Contains(TEXT("SOURCES += "), ESearchCase::CaseSensitive))
 		{
 			SOURCES_Found = true;
-			// we not at HEADERS list any more
+			// we're not at HEADERS list any more
 			HEADERS_Found = false;
 		}
 
@@ -168,16 +167,18 @@ bool FQtCreatorSourceCodeAccessor::AddSourceFiles(const TArray<FString>& Absolut
 				// add header to the HEADERS list
 				for (FString Header : Headers)
 				{
-					NewProFileAsString.Append(FString(" \\\n    ")).Append(Header).Append(FString("\n"));
+					NewProFileAsString.Append(FString(" \\\n    ")).Append(Header);
 				}
+				HEADERS_Found = false;
 			}
 			if (SOURCES_Found)
 			{
 				// add source to the SOURCES list
 				for (FString Source : Sources)
 				{
-					NewProFileAsString.Append(FString(" \\\n    ")).Append(Source).Append(FString("\n"));
+					NewProFileAsString.Append(FString(" \\\n    ")).Append(Source);
 				}
+				SOURCES_Found = false;
 			}
 		}
 
@@ -190,6 +191,7 @@ bool FQtCreatorSourceCodeAccessor::AddSourceFiles(const TArray<FString>& Absolut
 
 	// rewrite .pro file
 	FFileHelper::SaveStringToFile(NewProFileAsString, *ProFilePath);
+	FPlatformProcess::Sleep(1);
 
 	return true;
 }
@@ -247,7 +249,7 @@ bool FQtCreatorSourceCodeAccessor::CanRunQtCreator(FString& IDEPath) const
 	class FQtVisitor : public IPlatformFile::FDirectoryVisitor
 	{
 	public:
-		FString QtPath;
+		TArray<FString> QtCreatorPossiblePaths;
 		FQtVisitor()
 		{
 		}
@@ -255,18 +257,35 @@ bool FQtCreatorSourceCodeAccessor::CanRunQtCreator(FString& IDEPath) const
 		{
 			if (bIsDirectory)
 			{
-				QtPath = FString(Filename);
-				return false; // stop searching
+				QtCreatorPossiblePaths.Add(FString(Filename));
 			}
 			return true; // continue searching
 		}
 	};
+	TArray<FString> QtCreatorExePaths
+	{
+		"bin/qtcreator.exe",
+		"Tools/QtCreator/bin/qtcreator.exe"
+	};
 	FQtVisitor QtVistor;
 	FFileManagerGeneric::Get().IterateDirectory(TEXT(QT_PATH), QtVistor);
-	if (!QtVistor.QtPath.IsEmpty())
+	if (QtVistor.QtCreatorPossiblePaths.Num() == 0)
 	{
-		IDEPath = FPaths::Combine(QtVistor.QtPath, FString("Tools/QtCreator/bin/qtcreator.exe"));
-		return FPaths::FileExists(IDEPath);
+		return false;
+	}
+	QtVistor.QtCreatorPossiblePaths.Sort();
+	FString QtCreatorPossiblePath;
+	while (QtVistor.QtCreatorPossiblePaths.Num() > 0)
+	{
+		QtCreatorPossiblePath = QtVistor.QtCreatorPossiblePaths.Pop();
+		for (const FString QtCreatorExePath : QtCreatorExePaths)
+		{
+			IDEPath = FPaths::Combine(QtCreatorPossiblePath, QtCreatorExePath);
+			if (FPaths::FileExists(IDEPath))
+			{
+				return true;
+			}
+		}
 	}
 
 	return false;
@@ -294,16 +313,15 @@ bool FQtCreatorSourceCodeAccessor::OpenFilesInQtCreator(
 {
 	if (FilePaths.Num() == 0 && FilePath.IsEmpty()) return false;
 
+	FString IDEArguments;
 
 	FString IDEPath;
 	if (!CanRunQtCreator(IDEPath)) return false;
 	int32 PID;
 	if (!IsIDERunning(PID)) return false;
 
-	FString IDEArguments;
-
 	// PID
-	IDEArguments.Append(" -pid ").Append(FString::FromInt(PID)).Append(" ");
+	IDEArguments.Append("-pid ").Append(FString::FromInt(PID)).Append(" ");
 	// Solution path
 	IDEArguments.Append(FPaths::Combine(FPaths::GetPath(GetSolutionPath()), TEXT(SOLUTION_SUBPATH)));
 
