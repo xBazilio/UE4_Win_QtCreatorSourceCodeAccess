@@ -22,7 +22,6 @@
 #include "DesktopPlatformModule.h"
 #include "FileManagerGeneric.h"
 #include "Misc/FileHelper.h"
-#include "Logging/MessageLog.h"
 #include "Windows/WindowsHWrapper.h"
 #include <TlHelp32.h>
 
@@ -55,8 +54,6 @@ FText FQtCreatorSourceCodeAccessor::GetDescriptionText() const
 
 bool FQtCreatorSourceCodeAccessor::OpenSolution()
 {
-	FMessageLog("DevLog").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::OpenSolution()")));
-
 	int32 PID;
 	if (IsIDERunning(PID))
 	{
@@ -97,18 +94,16 @@ bool FQtCreatorSourceCodeAccessor::OpenSourceFiles(const TArray<FString>& Absolu
 	// Qt Creator should be opened to open files in context of the solution
 	if (!OpenSolution()) return false;
 
-	FMessageLog("DevLog").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::OpenSourceFiles")));
 	return OpenFilesInQtCreator(AbsoluteSourcePaths, FString(""));
 }
 
 bool FQtCreatorSourceCodeAccessor::AddSourceFiles(const TArray<FString>& AbsoluteSourcePaths, const TArray<FString>& AvailableModules)
 {
-	FMessageLog("DevLog").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::AddSourceFiles")));
-
 	// Path to the .pro file
 	FString ProFilePath = FPaths::Combine(
 			FPaths::GetPath(GetSolutionPath()),
-			FString("Intermediate/ProjectFiles/").Append(FPaths::GetBaseFilename(GetSolutionPath()).Append(".pro"))
+			FString(SOLUTION_SUBPATH),
+			FPaths::GetBaseFilename(GetSolutionPath()).Append(".pro")
 	);
 	if (!FPaths::FileExists(ProFilePath)) return false;
 
@@ -191,6 +186,9 @@ bool FQtCreatorSourceCodeAccessor::AddSourceFiles(const TArray<FString>& Absolut
 
 	// rewrite .pro file
 	FFileHelper::SaveStringToFile(NewProFileAsString, *ProFilePath);
+
+	// Workaround for "file is outside the project directory" warning
+	// TODO: not always works. Switching between 2 opened files may help.
 	FPlatformProcess::Sleep(1);
 
 	return true;
@@ -198,7 +196,7 @@ bool FQtCreatorSourceCodeAccessor::AddSourceFiles(const TArray<FString>& Absolut
 
 bool FQtCreatorSourceCodeAccessor::SaveAllOpenDocuments() const
 {
-	FMessageLog("DevLog").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::SaveAllOpenDocuments")));
+	// Can't find when this method is called
 	STUBBED("FQtCreatorSourceCodeAccessor::SaveAllOpenDocuments");
 	return false;
 }
@@ -234,9 +232,6 @@ bool FQtCreatorSourceCodeAccessor::IsIDERunning(int32& PID)
 	while (Process32Next(ProcessSnap, &PE32));
 
 	CloseHandle(ProcessSnap);
-
-	FMessageLog("DevLog").Error(FText::FromString(TEXT("FQtCreatorSourceCodeAccessor::IsIDERunning()")));
-	FMessageLog("DevLog").Error(FText::FromString(FString::FromInt(PID)));
 
 	return PID > 0;
 }
@@ -341,9 +336,6 @@ bool FQtCreatorSourceCodeAccessor::OpenFilesInQtCreator(
 				.Append(":").Append(FString::FromInt(LineNumber))
 				.Append(":").Append(FString::FromInt(ColumnNumber));
 	}
-	FMessageLog("DevLog").Error(FText::FromString(TEXT("Private FQtCreatorSourceCodeAccessor::OpenFilesInQtCreator()")));
-	FMessageLog("DevLog").Error(FText::FromString(IDEPath));
-	FMessageLog("DevLog").Error(FText::FromString(IDEArguments));
 
 	FProcHandle Proc = FWindowsPlatformProcess::CreateProc(*IDEPath, *IDEArguments, true, false, false, nullptr, 0, nullptr, nullptr);
 	if (Proc.IsValid())
