@@ -6,7 +6,7 @@ Source code accessor plugin for Unreal Editor 4, windows version. It alows to ma
 1. Read Unreal Engine Wiki for [how to setup your project for use with Qt Creator](https://wiki.unrealengine.com/Using_QtCreator_With_UnrealEngine4)
 
 ## As an editor plugin
-2. (As an editor plugin) Download [build]https://github.com/xBazilio/UE4_Win_QtCreatorSourceCodeAccess/releases/download/2.0/QtCreatorSourceCodeAccess.zip) and put it in the `UNREAL_ENGINE_4/Plugins/Developer/QtCreatorSourceCodeAccess` folder, so that you have `QtCreatorSourceCodeAccess.uplugin` file in path `UNREAL_ENGINE_4/Plugins/Developer/QtCreatorSourceCodeAccess/QtCreatorSourceCodeAccess.uplugin`
+2. Download [build]https://github.com/xBazilio/UE4_Win_QtCreatorSourceCodeAccess/releases/download/2.0/QtCreatorSourceCodeAccess.zip) and put it in the `UNREAL_ENGINE_4/Plugins/Developer/QtCreatorSourceCodeAccess` folder, so that you have `QtCreatorSourceCodeAccess.uplugin` file in path `UNREAL_ENGINE_4/Plugins/Developer/QtCreatorSourceCodeAccess/QtCreatorSourceCodeAccess.uplugin`
 
 ## As a project plugin
 
