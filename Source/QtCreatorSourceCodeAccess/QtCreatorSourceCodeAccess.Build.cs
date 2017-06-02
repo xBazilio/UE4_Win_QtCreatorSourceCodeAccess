@@ -1,30 +1,24 @@
 // Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
 
-using UnrealBuildTool;
-
-public class QtCreatorSourceCodeAccess : ModuleRules
+namespace UnrealBuildTool.Rules
 {
-	public QtCreatorSourceCodeAccess(TargetInfo Target)
+	public class QtCreatorSourceCodeAccess : ModuleRules
 	{
-		PrivateIncludePaths.AddRange(
-			new string[] {
-				"QtCreatorSourceCodeAccess/Private"
-			}
-		);
-			
-		
-		PrivateDependencyModuleNames.AddRange(
+		public QtCreatorSourceCodeAccess(ReadOnlyTargetRules Target) : base(Target)
+		{			
+			PrivateDependencyModuleNames.AddRange(
 				new string[]
 				{
 					"Core",
 					"SourceCodeAccess",
 					"DesktopPlatform",
 				}
-		);
+			);
 
-		if (UEBuildConfiguration.bBuildEditor)
-		{
-			PrivateDependencyModuleNames.Add("HotReload");
+			if (UEBuildConfiguration.bBuildEditor)
+			{
+				PrivateDependencyModuleNames.Add("HotReload");
+			}
 		}
 	}
 }
