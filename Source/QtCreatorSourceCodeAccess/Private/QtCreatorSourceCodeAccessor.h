@@ -43,6 +43,8 @@ private:
 	/** Solution path */
 	mutable FString CachedSolutionPath;
 
+	bool bQtCretorProjectInitialized = false;
+
 	/** Checks if QtCreator is already running */
 	bool IsIDERunning(int32& PID);
 
@@ -58,4 +60,7 @@ private:
 		int32 LineNumber = 0,
 		int32 ColumnNumber = 0
 	);
+
+	/** Auto Qt Creator Project initialization **/
+	void InitQtCreatorProject();
 };

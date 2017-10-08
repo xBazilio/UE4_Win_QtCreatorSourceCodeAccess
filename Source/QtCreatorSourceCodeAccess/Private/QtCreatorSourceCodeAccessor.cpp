@@ -24,6 +24,7 @@
 #include "Misc/FileHelper.h"
 #include "Windows/WindowsHWrapper.h"
 #include <TlHelp32.h>
+#include "Logging/MessageLog.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogQtCreatorAccessor, Log, All)
 
@@ -293,7 +294,12 @@ FString FQtCreatorSourceCodeAccessor::GetSolutionPath() const
 		FString SolutionPath;
 		if(FDesktopPlatformModule::Get()->GetSolutionPath(SolutionPath))
 		{
+			FMessageLog("DevLog").Error(FText::FromString(TEXT("Init solution path")));
 			CachedSolutionPath = FPaths::ConvertRelativePathToFull(SolutionPath);
+			FMessageLog("DevLog").Error(FText::FromString(CachedSolutionPath));
+
+			// here we check if Qt Creator project is set up and, if not, initialize it
+			InitQtCreatorProject();
 		}
 	}
 	return CachedSolutionPath;
@@ -344,6 +350,29 @@ bool FQtCreatorSourceCodeAccessor::OpenFilesInQtCreator(
 		return true;
 	}
 	return false;
+}
+
+void FQtCreatorSourceCodeAccessor::InitQtCreatorProject()
+{
+	if (bQtCretorProjectInitialized) return;
+
+	// search for %project_name%.pro.user in ProjectFiles folder
+	FString QtCreatorProjectFilePath = FPaths::Combine(
+		FPaths::GetPath(GetSolutionPath()),
+		TEXT(SOLUTION_SUBPATH),
+		FPaths::GetBaseFilename(GetSolutionPath()).Append(".pro.user")
+	);
+	FMessageLog("DevLog").Error(FText::FromString(QtCreatorProjectFilePath));
+
+	if (FPaths::FileExists(QtCreatorProjectFilePath))
+	{
+		FMessageLog("DevLog").Error(FText::FromString(TEXT("Found project file")));
+
+		bQtCretorProjectInitialized = true;
+		return;
+	}
+
+	// if no such file, do initializaion
 }
 
 #undef LOCTEXT_NAMESPACE
