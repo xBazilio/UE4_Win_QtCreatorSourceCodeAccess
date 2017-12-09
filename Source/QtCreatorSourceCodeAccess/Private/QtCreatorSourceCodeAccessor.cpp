@@ -5,6 +5,7 @@
 #include "Misc/FileHelper.h"
 #include "Windows/WindowsHWrapper.h"
 #include <TlHelp32.h>
+#include "QtCreatorSourceCodeAccessProjectInitializer.h"
 #include "Logging/MessageLog.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogQtCreatorAccessor, Log, All)
@@ -361,11 +362,13 @@ void FQtCreatorSourceCodeAccessor::InitQtCreatorProject(const FString& SolutionP
 	{
 		FMessageLog("DevLog").Error(FText::FromString(TEXT("Found project file")));
 
-		bQtCretorProjectInitialized = true;
-		return;
+		//bQtCretorProjectInitialized = true;
+		//return;
 	}
 
 	// if no such file, do initializaion
+	FQtCreatorSourceCodeAccessProjectInitializer Initializer;
+	Initializer.InitializeProject();
 }
 
 #undef LOCTEXT_NAMESPACE
