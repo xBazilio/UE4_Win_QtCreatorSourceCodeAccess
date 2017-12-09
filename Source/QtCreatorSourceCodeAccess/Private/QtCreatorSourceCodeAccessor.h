@@ -27,7 +27,7 @@ private:
 	/** Solution path */
 	mutable FString CachedSolutionPath;
 
-	bool bQtCretorProjectInitialized = false;
+	mutable bool bQtCretorProjectInitialized = false;
 
 	/** Checks if QtCreator is already running */
 	bool IsIDERunning(int32& PID);
@@ -46,5 +46,5 @@ private:
 	);
 
 	/** Auto Qt Creator Project initialization **/
-	void InitQtCreatorProject();
+	void InitQtCreatorProject(const FString& SolutionPath) const;
 };

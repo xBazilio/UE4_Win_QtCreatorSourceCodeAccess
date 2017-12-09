@@ -292,7 +292,7 @@ FString FQtCreatorSourceCodeAccessor::GetSolutionPath() const
 			FMessageLog("DevLog").Error(FText::FromString(CachedSolutionPath));
 
 			// here we check if Qt Creator project is set up and, if not, initialize it
-			InitQtCreatorProject();
+			InitQtCreatorProject(CachedSolutionPath);
 		}
 	}
 	return CachedSolutionPath;
@@ -345,15 +345,15 @@ bool FQtCreatorSourceCodeAccessor::OpenFilesInQtCreator(
 	return false;
 }
 
-void FQtCreatorSourceCodeAccessor::InitQtCreatorProject()
+void FQtCreatorSourceCodeAccessor::InitQtCreatorProject(const FString& SolutionPath) const
 {
 	if (bQtCretorProjectInitialized) return;
 
 	// search for %project_name%.pro.user in ProjectFiles folder
 	FString QtCreatorProjectFilePath = FPaths::Combine(
-		FPaths::GetPath(GetSolutionPath()),
+		FPaths::GetPath(SolutionPath),
 		TEXT(SOLUTION_SUBPATH),
-		FPaths::GetBaseFilename(GetSolutionPath()).Append(".pro.user")
+		FPaths::GetBaseFilename(SolutionPath).Append(".pro.user")
 	);
 	FMessageLog("DevLog").Error(FText::FromString(QtCreatorProjectFilePath));
 
