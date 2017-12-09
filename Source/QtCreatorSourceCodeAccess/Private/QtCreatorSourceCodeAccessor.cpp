@@ -17,7 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "QtCreatorSourceCodeAccessHeader.h"
 #include "QtCreatorSourceCodeAccessor.h"
 #include "DesktopPlatformModule.h"
 #include "FileManagerGeneric.h"
@@ -55,13 +54,18 @@ FText FQtCreatorSourceCodeAccessor::GetDescriptionText() const
 
 bool FQtCreatorSourceCodeAccessor::OpenSolution()
 {
+	return OpenSolutionAtPath(GetSolutionPath());
+}
+
+bool FQtCreatorSourceCodeAccessor::OpenSolutionAtPath(const FString& InSolutionPath)
+{
 	int32 PID;
 	if (IsIDERunning(PID))
 	{
 		return true;
 	}
 
-	FString Solution = FPaths::Combine(FPaths::GetPath(GetSolutionPath()), TEXT(SOLUTION_SUBPATH));
+	FString Solution = FPaths::Combine(FPaths::GetPath(InSolutionPath), TEXT(SOLUTION_SUBPATH));
 	FString IDEPath;
 
 	if (!CanRunQtCreator(IDEPath))
@@ -79,6 +83,13 @@ bool FQtCreatorSourceCodeAccessor::OpenSolution()
 		return true;
 	}
 	return false;
+}
+
+bool FQtCreatorSourceCodeAccessor::DoesSolutionExist() const
+{
+	FString SolutionPath = GetSolutionPath();
+	const FString FullPath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*SolutionPath);
+	return FPaths::FileExists(FullPath);
 }
 
 bool FQtCreatorSourceCodeAccessor::OpenFileAtLine(const FString& FullPath, int32 LineNumber, int32 ColumnNumber)
@@ -156,7 +167,7 @@ bool FQtCreatorSourceCodeAccessor::AddSourceFiles(const TArray<FString>& Absolut
 			HEADERS_Found = false;
 		}
 
-		if (ProString.TrimTrailing().IsEmpty())
+		if (ProString.TrimEnd().IsEmpty())
 		{
 			if (HEADERS_Found)
 			{

@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "QtCreatorSourceCodeAccessHeader.h"
 #include "QtCreatorSourceCodeAccessModule.h"
+#include "ModuleManager.h"
 #include "Features/IModularFeatures.h"
 
 IMPLEMENT_MODULE(FQtCreatorSourceCodeAccessModule, QtCreatorSourceCodeAccess)
@@ -27,7 +27,7 @@ IMPLEMENT_MODULE(FQtCreatorSourceCodeAccessModule, QtCreatorSourceCodeAccess)
 void FQtCreatorSourceCodeAccessModule::StartupModule()
 {
 	// Bind our source control provider to the editor
-	IModularFeatures::Get().RegisterModularFeature(TEXT("SourceCodeAccessor"), &QtCreatorSourceCodeAccessor );
+	IModularFeatures::Get().RegisterModularFeature(TEXT("SourceCodeAccessor"), &QtCreatorSourceCodeAccessor);
 }
 
 void FQtCreatorSourceCodeAccessModule::ShutdownModule()
