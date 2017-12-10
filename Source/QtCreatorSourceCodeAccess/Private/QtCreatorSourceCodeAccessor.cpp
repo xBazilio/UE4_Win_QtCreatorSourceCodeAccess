@@ -3,6 +3,7 @@
 #include "DesktopPlatformModule.h"
 #include "FileManagerGeneric.h"
 #include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
 #include "Windows/WindowsHWrapper.h"
 #include <TlHelp32.h>
 #include "QtCreatorSourceCodeAccessProjectInitializer.h"
@@ -367,7 +368,7 @@ void FQtCreatorSourceCodeAccessor::InitQtCreatorProject(const FString& SolutionP
 	}
 
 	// if no such file, do initializaion
-	FQtCreatorSourceCodeAccessProjectInitializer Initializer;
+	FQtCreatorSourceCodeAccessProjectInitializer Initializer(FPaths::GetPath(SolutionPath));
 	Initializer.InitializeProject();
 }
 
