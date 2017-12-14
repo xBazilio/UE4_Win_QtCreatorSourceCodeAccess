@@ -12,15 +12,7 @@
 
 void FQtCreatorSourceCodeAccessProjectInitializer::InitializeProject()
 {
-	FMessageLog("DevLog").Error(FText::FromString(TEXT("InitializeProject()")));
-
-	FMessageLog("DevLog").Error(FText::FromString(TEXT("Paths:")));
 	EnginePath = FPaths::ConvertRelativePathToFull(FGenericPlatformMisc::EngineDir());
-	FMessageLog("DevLog").Error(FText::FromString(EnginePath));
-
-	FMessageLog("DevLog").Error(FText::FromString(SolutionPath));
-
-	FMessageLog("DevLog").Error(FText::FromString(ProjectName));
 
 	CreateDotProFile();
 	CreateDefinesPriFile();
@@ -31,6 +23,46 @@ void FQtCreatorSourceCodeAccessProjectInitializer::InitializeProject()
 void FQtCreatorSourceCodeAccessProjectInitializer::CreateDotProFile()
 {
 	FMessageLog("DevLog").Error(FText::FromString(TEXT("CreateDotProFile()")));
+
+	// iterate over solution files
+	class FSolutionVisitor : public IPlatformFile::FDirectoryVisitor
+	{
+	public:
+		TArray<FString> Headers;
+		TArray<FString> Sources;
+		FSolutionVisitor()
+		{
+		}
+		virtual bool Visit(const TCHAR* Filename, bool bIsDirectory)
+		{
+			if (!bIsDirectory)
+			{
+				FString StringFilename(Filename);
+
+				// skip all paths except with /Source/ substring
+				if (!StringFilename.Contains(TEXT("/Source/"), ESearchCase::CaseSensitive))
+				{
+					return true; // continue searching
+				}
+				// look for .cpp and .h files
+				// collect found files
+				if (StringFilename.Find(FString(".h"), ESearchCase::IgnoreCase, ESearchDir::FromEnd) == StringFilename.Len() - 2)
+				{
+					Headers.Add(StringFilename);
+				}
+				if (StringFilename.Find(FString(".cpp"), ESearchCase::IgnoreCase, ESearchDir::FromEnd) == StringFilename.Len() - 4)
+				{
+					Sources.Add(StringFilename);
+				}
+				FMessageLog("DevLog").Error(FText::FromString(StringFilename));
+			}
+			return true; // continue searching
+		}
+	};
+	FSolutionVisitor SolutionVisitor;
+	FFileManagerGeneric::Get().IterateDirectoryRecursively(SolutionPath.GetCharArray().GetData(), SolutionVisitor);
+
+	// write new .pro file from scratch
 }
 
 void FQtCreatorSourceCodeAccessProjectInitializer::CreateDefinesPriFile()
