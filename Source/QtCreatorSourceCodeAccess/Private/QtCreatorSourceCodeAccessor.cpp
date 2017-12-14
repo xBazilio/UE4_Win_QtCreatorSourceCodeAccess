@@ -7,6 +7,7 @@
 #include "Windows/WindowsHWrapper.h"
 #include <TlHelp32.h>
 #include "QtCreatorSourceCodeAccessProjectInitializer.h"
+
 #include "Logging/MessageLog.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogQtCreatorAccessor, Log, All)
@@ -368,7 +369,10 @@ void FQtCreatorSourceCodeAccessor::InitQtCreatorProject(const FString& SolutionP
 	}
 
 	// if no such file, do initializaion
-	FQtCreatorSourceCodeAccessProjectInitializer Initializer(FPaths::GetPath(SolutionPath));
+	FQtCreatorSourceCodeAccessProjectInitializer Initializer(
+		FPaths::GetPath(SolutionPath),
+		FPaths::GetBaseFilename(SolutionPath)
+	);
 	Initializer.InitializeProject();
 }
 

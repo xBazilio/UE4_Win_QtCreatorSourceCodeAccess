@@ -2,10 +2,13 @@
 #include "DesktopPlatformModule.h"
 #include "FileManagerGeneric.h"
 #include "Misc/FileHelper.h"
-#include "Logging/MessageLog.h"
 #include "GenericPlatform/GenericPlatformMisc.h"
 #include "Misc/Paths.h"
 #include "Interfaces/IPluginManager.h"
+
+#include "Logging/MessageLog.h"
+
+#define	SOLUTION_SUBPATH "Intermediate/ProjectFiles"
 
 void FQtCreatorSourceCodeAccessProjectInitializer::InitializeProject()
 {
@@ -17,7 +20,6 @@ void FQtCreatorSourceCodeAccessProjectInitializer::InitializeProject()
 
 	FMessageLog("DevLog").Error(FText::FromString(SolutionPath));
 
-	ProjectName = FPaths::GetBaseFilename(SolutionPath);
 	FMessageLog("DevLog").Error(FText::FromString(ProjectName));
 
 	CreateDotProFile();
@@ -47,7 +49,27 @@ void FQtCreatorSourceCodeAccessProjectInitializer::CreateDotProDotUserFile()
 
 	FString DotProTemplate = FPaths::Combine(
 		IPluginManager::Get().FindPlugin(TEXT("QtCreatorSourceCodeAccess"))->GetBaseDir(),
-		TEXT("Templates/QtCreatorPlugin.pro.user.shared.tpl")
+		TEXT("Templates/project.pro.user.shared.tpl")
 	);
 	FMessageLog("DevLog").Error(FText::FromString(DotProTemplate));
+
+	if (!FPaths::FileExists(DotProTemplate)) return;
+
+	// read tpl file
+	FString TplFileAsString;
+	FFileHelper::LoadFileToString(TplFileAsString, DotProTemplate.GetCharArray().GetData());
+
+	// replace marcos to actual values
+	TplFileAsString.Replace(*FString("%project_name%"), *ProjectName, ESearchCase::CaseSensitive);
+	TplFileAsString.Replace(*FString("%project_path%"), *SolutionPath, ESearchCase::CaseSensitive);
+	TplFileAsString.Replace(*FString("%ue_engine_path%"), *EnginePath, ESearchCase::CaseSensitive);
+
+	// write new .pro.user.shared file
+	FString ProUserSharedFilePath = FPaths::Combine(
+			SolutionPath,
+			FString(SOLUTION_SUBPATH),
+			FString(ProjectName).Append(".pro.user.shared.test")
+	);
+	FMessageLog("DevLog").Error(FText::FromString(ProUserSharedFilePath));
+	FFileHelper::SaveStringToFile(TplFileAsString, *ProUserSharedFilePath);
 }
