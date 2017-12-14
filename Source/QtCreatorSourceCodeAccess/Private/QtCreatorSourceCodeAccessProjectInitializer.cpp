@@ -45,14 +45,12 @@ void FQtCreatorSourceCodeAccessProjectInitializer::CreateIncludesPriFile()
 
 void FQtCreatorSourceCodeAccessProjectInitializer::CreateDotProDotUserFile()
 {
-	FMessageLog("DevLog").Error(FText::FromString(TEXT("CreateDotProDotUserFile()")));
-
 	FString DotProTemplate = FPaths::Combine(
 		IPluginManager::Get().FindPlugin(TEXT("QtCreatorSourceCodeAccess"))->GetBaseDir(),
 		TEXT("Templates/project.pro.user.shared.tpl")
 	);
-	FMessageLog("DevLog").Error(FText::FromString(DotProTemplate));
 
+	// can't continue without tpl file
 	if (!FPaths::FileExists(DotProTemplate)) return;
 
 	// read tpl file
@@ -68,8 +66,7 @@ void FQtCreatorSourceCodeAccessProjectInitializer::CreateDotProDotUserFile()
 	FString ProUserSharedFilePath = FPaths::Combine(
 			SolutionPath,
 			FString(SOLUTION_SUBPATH),
-			FString(ProjectName).Append(".pro.user.shared.test")
+			FString(ProjectName).Append(".pro.user.shared.test") // TODO: remove .test
 	);
-	FMessageLog("DevLog").Error(FText::FromString(ProUserSharedFilePath));
 	FFileHelper::SaveStringToFile(TplFileAsString, *ProUserSharedFilePath);
 }
