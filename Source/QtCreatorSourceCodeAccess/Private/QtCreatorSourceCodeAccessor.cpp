@@ -125,7 +125,7 @@ bool FQtCreatorSourceCodeAccessor::AddSourceFiles(const TArray<FString>& Absolut
 	FString ProFileAsString;
 	FFileHelper::LoadFileToString(ProFileAsString, ProFilePath.GetCharArray().GetData());
 	// Fix newline characters
-	ProFileAsString.Replace(*FString("\r\n"), *FString("\n"), ESearchCase::CaseSensitive);
+	ProFileAsString = ProFileAsString.Replace(*FString("\r\n"), *FString("\n"), ESearchCase::CaseSensitive);
 
 	// Split .pro string into array
 	TArray<FString> ProFileAsArray;
