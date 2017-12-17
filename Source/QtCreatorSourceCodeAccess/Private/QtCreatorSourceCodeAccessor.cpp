@@ -1,28 +1,12 @@
 // Implementation of ISourceCodeAccessor
-/*
- * Copyright (C) 2017 Vasiliy Rumyantsev
- *
- * This file is part of QtCreatorSourceCodeAccess, windows version.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 #include "QtCreatorSourceCodeAccessor.h"
 #include "DesktopPlatformModule.h"
 #include "FileManagerGeneric.h"
 #include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
 #include "Windows/WindowsHWrapper.h"
 #include <TlHelp32.h>
+#include "QtCreatorSourceCodeAccessProjectInitializer.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogQtCreatorAccessor, Log, All)
 
@@ -114,7 +98,7 @@ bool FQtCreatorSourceCodeAccessor::AddSourceFiles(const TArray<FString>& Absolut
 	FString ProFilePath = FPaths::Combine(
 			FPaths::GetPath(GetSolutionPath()),
 			FString(SOLUTION_SUBPATH),
-			FPaths::GetBaseFilename(GetSolutionPath()).Append(".pro")
+			FPaths::GetBaseFilename(GetSolutionPath()).Append(TEXT(".pro"))
 	);
 	if (!FPaths::FileExists(ProFilePath)) return false;
 
@@ -139,7 +123,7 @@ bool FQtCreatorSourceCodeAccessor::AddSourceFiles(const TArray<FString>& Absolut
 	FString ProFileAsString;
 	FFileHelper::LoadFileToString(ProFileAsString, ProFilePath.GetCharArray().GetData());
 	// Fix newline characters
-	ProFileAsString.Replace(*FString("\r\n"), *FString("\n"), ESearchCase::CaseSensitive);
+	ProFileAsString = ProFileAsString.Replace(*FString("\r\n"), *FString("\n"), ESearchCase::CaseSensitive);
 
 	// Split .pro string into array
 	TArray<FString> ProFileAsArray;
@@ -173,7 +157,7 @@ bool FQtCreatorSourceCodeAccessor::AddSourceFiles(const TArray<FString>& Absolut
 				// add header to the HEADERS list
 				for (FString Header : Headers)
 				{
-					NewProFileAsString.Append(FString(" \\\n    ")).Append(Header);
+					NewProFileAsString.Append(TEXT(" \\\n    ")).Append(Header);
 				}
 				HEADERS_Found = false;
 			}
@@ -182,7 +166,7 @@ bool FQtCreatorSourceCodeAccessor::AddSourceFiles(const TArray<FString>& Absolut
 				// add source to the SOURCES list
 				for (FString Source : Sources)
 				{
-					NewProFileAsString.Append(FString(" \\\n    ")).Append(Source);
+					NewProFileAsString.Append(TEXT(" \\\n    ")).Append(Source);
 				}
 				SOURCES_Found = false;
 			}
@@ -190,7 +174,7 @@ bool FQtCreatorSourceCodeAccessor::AddSourceFiles(const TArray<FString>& Absolut
 
 		if (!NewProFileAsString.IsEmpty())
 		{
-			NewProFileAsString.Append(FString("\n"));
+			NewProFileAsString.Append(TEXT("\n"));
 		}
 		NewProFileAsString.Append(ProString);
 	}
@@ -305,6 +289,9 @@ FString FQtCreatorSourceCodeAccessor::GetSolutionPath() const
 		if(FDesktopPlatformModule::Get()->GetSolutionPath(SolutionPath))
 		{
 			CachedSolutionPath = FPaths::ConvertRelativePathToFull(SolutionPath);
+
+			// here we check if Qt Creator project is set up and, if not, initialize it
+			InitQtCreatorProject(CachedSolutionPath);
 		}
 	}
 	return CachedSolutionPath;
@@ -327,7 +314,7 @@ bool FQtCreatorSourceCodeAccessor::OpenFilesInQtCreator(
 	if (!IsIDERunning(PID)) return false;
 
 	// PID
-	IDEArguments.Append("-pid ").Append(FString::FromInt(PID)).Append(" ");
+	IDEArguments.Append(TEXT("-pid ")).Append(FString::FromInt(PID)).Append(TEXT(" "));
 	// Solution path
 	IDEArguments.Append(FPaths::Combine(FPaths::GetPath(GetSolutionPath()), TEXT(SOLUTION_SUBPATH)));
 
@@ -336,16 +323,16 @@ bool FQtCreatorSourceCodeAccessor::OpenFilesInQtCreator(
 	{
 		for (auto OneFile : FilePaths)
 		{
-			IDEArguments.Append(" ").Append(OneFile);
+			IDEArguments.Append(TEXT(" ")).Append(OneFile);
 		}
 	}
 	else
 	{
 		IDEArguments.Append(" ")
-				// space in path workaround
-				.Append(FString("\"")).Append(FilePath).Append(FString("\""))
-				.Append(":").Append(FString::FromInt(LineNumber))
-				.Append(":").Append(FString::FromInt(ColumnNumber));
+				// workaround for spaces in path
+				.Append(TEXT("\"")).Append(FilePath).Append(TEXT("\""))
+				.Append(TEXT(":")).Append(FString::FromInt(LineNumber))
+				.Append(TEXT(":")).Append(FString::FromInt(ColumnNumber));
 	}
 
 	FProcHandle Proc = FWindowsPlatformProcess::CreateProc(*IDEPath, *IDEArguments, true, false, false, nullptr, 0, nullptr, nullptr);
@@ -355,6 +342,31 @@ bool FQtCreatorSourceCodeAccessor::OpenFilesInQtCreator(
 		return true;
 	}
 	return false;
+}
+
+void FQtCreatorSourceCodeAccessor::InitQtCreatorProject(const FString& SolutionPath) const
+{
+	if (bQtCretorProjectInitialized) return;
+
+	// search for .pro file in ProjectFiles folder
+	FString QtCreatorProjectFilePath = FPaths::Combine(
+		FPaths::GetPath(SolutionPath),
+		TEXT(SOLUTION_SUBPATH),
+		FPaths::GetBaseFilename(SolutionPath).Append(TEXT(".pro"))
+	);
+
+	if (FPaths::FileExists(QtCreatorProjectFilePath))
+	{
+		bQtCretorProjectInitialized = true;
+		return;
+	}
+
+	// if no such file, do initializaion
+	FQtCreatorSourceCodeAccessProjectInitializer Initializer(
+		FPaths::GetPath(SolutionPath),
+		FPaths::GetBaseFilename(SolutionPath)
+	);
+	Initializer.InitializeProject();
 }
 
 #undef LOCTEXT_NAMESPACE
