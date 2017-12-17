@@ -329,7 +329,7 @@ bool FQtCreatorSourceCodeAccessor::OpenFilesInQtCreator(
 	else
 	{
 		IDEArguments.Append(" ")
-				// space in path workaround
+				// workaround for spaces in path
 				.Append(TEXT("\"")).Append(FilePath).Append(TEXT("\""))
 				.Append(TEXT(":")).Append(FString::FromInt(LineNumber))
 				.Append(TEXT(":")).Append(FString::FromInt(ColumnNumber));

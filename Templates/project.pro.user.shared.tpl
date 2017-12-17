@@ -2,23 +2,15 @@
 <!DOCTYPE QtCreatorProject>
 <qtcreator>
  <data>
-  <variable>EnvironmentId</variable>
-  <value type="QByteArray">{f9b529e5-255f-4f86-9fa8-5459d310a03c}</value>
- </data>
- <data>
-  <variable>ProjectExplorer.Project.ActiveTarget</variable>
-  <value type="int">0</value>
- </data>
- <data>
   <variable>ProjectExplorer.Project.EditorSettings</variable>
   <valuemap type="QVariantMap">
    <value type="bool" key="EditorConfiguration.AutoIndent">true</value>
    <value type="bool" key="EditorConfiguration.AutoSpacesForTabs">false</value>
-   <value type="bool" key="EditorConfiguration.CamelCaseNavigation">true</value>
+   <value type="bool" key="EditorConfiguration.CamelCaseNavigation">false</value>
    <valuemap type="QVariantMap" key="EditorConfiguration.CodeStyle.0">
     <value type="QString" key="language">Cpp</value>
     <valuemap type="QVariantMap" key="value">
-     <value type="QByteArray" key="CurrentPreferences">CppGlobal</value>
+     <value type="QByteArray" key="CurrentPreferences">qt2</value>
     </valuemap>
    </valuemap>
    <valuemap type="QVariantMap" key="EditorConfiguration.CodeStyle.1">
@@ -32,19 +24,19 @@
    <value type="bool" key="EditorConfiguration.ConstrainTooltips">false</value>
    <value type="int" key="EditorConfiguration.IndentSize">4</value>
    <value type="bool" key="EditorConfiguration.KeyboardTooltips">false</value>
-   <value type="int" key="EditorConfiguration.MarginColumn">80</value>
+   <value type="int" key="EditorConfiguration.MarginColumn">120</value>
    <value type="bool" key="EditorConfiguration.MouseHiding">true</value>
    <value type="bool" key="EditorConfiguration.MouseNavigation">true</value>
-   <value type="int" key="EditorConfiguration.PaddingMode">1</value>
+   <value type="int" key="EditorConfiguration.PaddingMode">2</value>
    <value type="bool" key="EditorConfiguration.ScrollWheelZooming">true</value>
-   <value type="bool" key="EditorConfiguration.ShowMargin">false</value>
+   <value type="bool" key="EditorConfiguration.ShowMargin">true</value>
    <value type="int" key="EditorConfiguration.SmartBackspaceBehavior">0</value>
    <value type="bool" key="EditorConfiguration.SmartSelectionChanging">true</value>
-   <value type="bool" key="EditorConfiguration.SpacesForTabs">true</value>
-   <value type="int" key="EditorConfiguration.TabKeyBehavior">0</value>
-   <value type="int" key="EditorConfiguration.TabSize">8</value>
-   <value type="bool" key="EditorConfiguration.UseGlobal">true</value>
-   <value type="int" key="EditorConfiguration.Utf8BomBehavior">1</value>
+   <value type="bool" key="EditorConfiguration.SpacesForTabs">false</value>
+   <value type="int" key="EditorConfiguration.TabKeyBehavior">1</value>
+   <value type="int" key="EditorConfiguration.TabSize">4</value>
+   <value type="bool" key="EditorConfiguration.UseGlobal">false</value>
+   <value type="int" key="EditorConfiguration.Utf8BomBehavior">2</value>
    <value type="bool" key="EditorConfiguration.addFinalNewLine">true</value>
    <value type="bool" key="EditorConfiguration.cleanIndentation">true</value>
    <value type="bool" key="EditorConfiguration.cleanWhitespace">true</value>
@@ -55,6 +47,7 @@
   <variable>ProjectExplorer.Project.PluginSettings</variable>
   <valuemap type="QVariantMap"/>
  </data>
+<!-- The following settings aren't imported automatically. I just live them here in hope they will sometime. -->
  <data>
   <variable>ProjectExplorer.Project.Target.0</variable>
   <valuemap type="QVariantMap">
