@@ -8,8 +8,6 @@
 #include <TlHelp32.h>
 #include "QtCreatorSourceCodeAccessProjectInitializer.h"
 
-#include "Logging/MessageLog.h"
-
 DEFINE_LOG_CATEGORY_STATIC(LogQtCreatorAccessor, Log, All)
 
 #define LOCTEXT_NAMESPACE "QtCreatorSourceCodeAccessor"
@@ -100,7 +98,7 @@ bool FQtCreatorSourceCodeAccessor::AddSourceFiles(const TArray<FString>& Absolut
 	FString ProFilePath = FPaths::Combine(
 			FPaths::GetPath(GetSolutionPath()),
 			FString(SOLUTION_SUBPATH),
-			FPaths::GetBaseFilename(GetSolutionPath()).Append(".pro")
+			FPaths::GetBaseFilename(GetSolutionPath()).Append(TEXT(".pro"))
 	);
 	if (!FPaths::FileExists(ProFilePath)) return false;
 
@@ -159,7 +157,7 @@ bool FQtCreatorSourceCodeAccessor::AddSourceFiles(const TArray<FString>& Absolut
 				// add header to the HEADERS list
 				for (FString Header : Headers)
 				{
-					NewProFileAsString.Append(FString(" \\\n    ")).Append(Header);
+					NewProFileAsString.Append(TEXT(" \\\n    ")).Append(Header);
 				}
 				HEADERS_Found = false;
 			}
@@ -168,7 +166,7 @@ bool FQtCreatorSourceCodeAccessor::AddSourceFiles(const TArray<FString>& Absolut
 				// add source to the SOURCES list
 				for (FString Source : Sources)
 				{
-					NewProFileAsString.Append(FString(" \\\n    ")).Append(Source);
+					NewProFileAsString.Append(TEXT(" \\\n    ")).Append(Source);
 				}
 				SOURCES_Found = false;
 			}
@@ -176,7 +174,7 @@ bool FQtCreatorSourceCodeAccessor::AddSourceFiles(const TArray<FString>& Absolut
 
 		if (!NewProFileAsString.IsEmpty())
 		{
-			NewProFileAsString.Append(FString("\n"));
+			NewProFileAsString.Append(TEXT("\n"));
 		}
 		NewProFileAsString.Append(ProString);
 	}
@@ -290,9 +288,7 @@ FString FQtCreatorSourceCodeAccessor::GetSolutionPath() const
 		FString SolutionPath;
 		if(FDesktopPlatformModule::Get()->GetSolutionPath(SolutionPath))
 		{
-			FMessageLog("DevLog").Error(FText::FromString(TEXT("Init solution path")));
 			CachedSolutionPath = FPaths::ConvertRelativePathToFull(SolutionPath);
-			FMessageLog("DevLog").Error(FText::FromString(CachedSolutionPath));
 
 			// here we check if Qt Creator project is set up and, if not, initialize it
 			InitQtCreatorProject(CachedSolutionPath);
@@ -318,7 +314,7 @@ bool FQtCreatorSourceCodeAccessor::OpenFilesInQtCreator(
 	if (!IsIDERunning(PID)) return false;
 
 	// PID
-	IDEArguments.Append("-pid ").Append(FString::FromInt(PID)).Append(" ");
+	IDEArguments.Append(TEXT("-pid ")).Append(FString::FromInt(PID)).Append(TEXT(" "));
 	// Solution path
 	IDEArguments.Append(FPaths::Combine(FPaths::GetPath(GetSolutionPath()), TEXT(SOLUTION_SUBPATH)));
 
@@ -327,16 +323,16 @@ bool FQtCreatorSourceCodeAccessor::OpenFilesInQtCreator(
 	{
 		for (auto OneFile : FilePaths)
 		{
-			IDEArguments.Append(" ").Append(OneFile);
+			IDEArguments.Append(TEXT(" ")).Append(OneFile);
 		}
 	}
 	else
 	{
 		IDEArguments.Append(" ")
 				// space in path workaround
-				.Append(FString("\"")).Append(FilePath).Append(FString("\""))
-				.Append(":").Append(FString::FromInt(LineNumber))
-				.Append(":").Append(FString::FromInt(ColumnNumber));
+				.Append(TEXT("\"")).Append(FilePath).Append(TEXT("\""))
+				.Append(TEXT(":")).Append(FString::FromInt(LineNumber))
+				.Append(TEXT(":")).Append(FString::FromInt(ColumnNumber));
 	}
 
 	FProcHandle Proc = FWindowsPlatformProcess::CreateProc(*IDEPath, *IDEArguments, true, false, false, nullptr, 0, nullptr, nullptr);
@@ -352,20 +348,17 @@ void FQtCreatorSourceCodeAccessor::InitQtCreatorProject(const FString& SolutionP
 {
 	if (bQtCretorProjectInitialized) return;
 
-	// search for %project_name%.pro.user in ProjectFiles folder
+	// search for .pro file in ProjectFiles folder
 	FString QtCreatorProjectFilePath = FPaths::Combine(
 		FPaths::GetPath(SolutionPath),
 		TEXT(SOLUTION_SUBPATH),
-		FPaths::GetBaseFilename(SolutionPath).Append(".pro.user")
+		FPaths::GetBaseFilename(SolutionPath).Append(TEXT(".pro"))
 	);
-	FMessageLog("DevLog").Error(FText::FromString(QtCreatorProjectFilePath));
 
 	if (FPaths::FileExists(QtCreatorProjectFilePath))
 	{
-		FMessageLog("DevLog").Error(FText::FromString(TEXT("Found project file")));
-
-		//bQtCretorProjectInitialized = true;
-		//return;
+		bQtCretorProjectInitialized = true;
+		return;
 	}
 
 	// if no such file, do initializaion

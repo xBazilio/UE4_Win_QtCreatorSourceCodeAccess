@@ -1,7 +1,7 @@
 {
 	"FileVersion": 3,
-	"Version": 2,
-	"VersionName": "2.3",
+	"Version": 3,
+	"VersionName": "3.0",
 	"FriendlyName": "Qt Creator Source Code Access",
 	"Description": "Allows access to source code in Qt Creator.",
 	"Category": "Programming",

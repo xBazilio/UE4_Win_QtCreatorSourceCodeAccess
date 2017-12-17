@@ -20,6 +20,12 @@ private:
 
 	void CreateDotProFile();
 	void CreateDefinesPriFile();
+	void CreateDotPriFile(
+		const FString& StartTag,
+		const FString& EndTag,
+		const FString& VarName,
+		const FString& FileName
+	);
 	void CreateIncludesPriFile();
 	void CreateDotProDotUserFile();
 };

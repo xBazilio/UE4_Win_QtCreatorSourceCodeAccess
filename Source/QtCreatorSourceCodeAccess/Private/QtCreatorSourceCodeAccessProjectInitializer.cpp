@@ -5,8 +5,6 @@
 #include "Misc/Paths.h"
 #include "Interfaces/IPluginManager.h"
 
-#include "Logging/MessageLog.h"
-
 #define	SOLUTION_SUBPATH "Intermediate/ProjectFiles"
 
 void FQtCreatorSourceCodeAccessProjectInitializer::InitializeProject()
@@ -131,45 +129,109 @@ void FQtCreatorSourceCodeAccessProjectInitializer::CreateDotProFile()
 	FString DotProFilePath = FPaths::Combine(
 		SolutionPath,
 		FString(SOLUTION_SUBPATH),
-		FString(ProjectName).Append(".pro.test") // TODO: remove .test
+		FString(ProjectName).Append(TEXT(".pro"))
 	);
 	FFileHelper::SaveStringToFile(DotProFileContent, *DotProFilePath);
 }
 
 void FQtCreatorSourceCodeAccessProjectInitializer::CreateDefinesPriFile()
 {
-	FMessageLog("DevLog").Error(FText::FromString(TEXT("CreateDefinesPriFile()")));
+	CreateDotPriFile(
+		FString("<NMakePreprocessorDefinitions>"),
+		FString("</NMakePreprocessorDefinitions>"),
+		FString("DEFINES"),
+		FPaths::Combine(
+			SolutionPath,
+			FString(SOLUTION_SUBPATH),
+			FString("defines.pri")
+		)
+	);
 }
 
 void FQtCreatorSourceCodeAccessProjectInitializer::CreateIncludesPriFile()
 {
-	FMessageLog("DevLog").Error(FText::FromString(TEXT("CreateIncludesPriFile()")));
+	CreateDotPriFile(
+		FString("<NMakeIncludeSearchPath>"),
+		FString("</NMakeIncludeSearchPath>"),
+		FString("INCLUDEPATH"),
+		FPaths::Combine(
+			SolutionPath,
+			FString(SOLUTION_SUBPATH),
+			FString("includes.pri")
+		)
+	);
+}
+
+void FQtCreatorSourceCodeAccessProjectInitializer::CreateDotPriFile(
+	const FString& StartTag,
+	const FString& EndTag,
+	const FString& VarName,
+	const FString& FileName
+)
+{
+	FString VcxProjFilePath = FPaths::Combine(
+		SolutionPath,
+		TEXT(SOLUTION_SUBPATH),
+		FString(ProjectName).Append(TEXT(".vcxproj"))
+	);
+
+	// nothing to do here without .vcxproj file
+	if (!FPaths::FileExists(VcxProjFilePath)) return;
+
+	FString VcxProjFileContent;
+	FFileHelper::LoadFileToString(VcxProjFileContent, VcxProjFilePath.GetCharArray().GetData());
+
+	int32 StartPosition = VcxProjFileContent.Find(StartTag, ESearchCase::IgnoreCase);
+	if (!StartPosition)
+	{
+		// Can't continue without tag content
+		return;
+	}
+	else
+	{
+		StartPosition += StartTag.Len(); // shift position to the start of content
+	}
+	int32 EndPosition = VcxProjFileContent.Find(EndTag, ESearchCase::IgnoreCase);
+	if (!EndPosition)
+	{
+		// Can't continue without tag content
+		return;
+	}
+
+	FString ReplacementMid("\"\n");
+	ReplacementMid = ReplacementMid.Append(VarName).Append(TEXT(" += \""));
+	FString DotPriFileContent = VcxProjFileContent.Mid(StartPosition, EndPosition - StartPosition);
+	DotPriFileContent = DotPriFileContent.Replace(*FString(";"), *ReplacementMid);
+	DotPriFileContent = FString(VarName).Append(TEXT(" += \"")).Append(DotPriFileContent).Append(TEXT("\"\n"));
+
+	// write new .pri file
+	FFileHelper::SaveStringToFile(DotPriFileContent, *FileName);
 }
 
 void FQtCreatorSourceCodeAccessProjectInitializer::CreateDotProDotUserFile()
 {
-	FString DotProTemplate = FPaths::Combine(
+	FString DotProTplPath = FPaths::Combine(
 		IPluginManager::Get().FindPlugin(TEXT("QtCreatorSourceCodeAccess"))->GetBaseDir(),
 		TEXT("Templates/project.pro.user.shared.tpl")
 	);
 
 	// can't continue without tpl file
-	if (!FPaths::FileExists(DotProTemplate)) return;
+	if (!FPaths::FileExists(DotProTplPath)) return;
 
 	// read tpl file
-	FString TplFileAsString;
-	FFileHelper::LoadFileToString(TplFileAsString, DotProTemplate.GetCharArray().GetData());
+	FString DotProTplContent;
+	FFileHelper::LoadFileToString(DotProTplContent, DotProTplPath.GetCharArray().GetData());
 
 	// replace marcos to actual values
-	TplFileAsString = TplFileAsString.Replace(*FString("%project_name%"), *ProjectName, ESearchCase::CaseSensitive);
-	TplFileAsString = TplFileAsString.Replace(*FString("%project_path%"), *SolutionPath, ESearchCase::CaseSensitive);
-	TplFileAsString = TplFileAsString.Replace(*FString("%ue_engine_path%"), *EnginePath, ESearchCase::CaseSensitive);
+	DotProTplContent = DotProTplContent.Replace(*FString("%project_name%"), *ProjectName, ESearchCase::CaseSensitive);
+	DotProTplContent = DotProTplContent.Replace(*FString("%project_path%"), *SolutionPath, ESearchCase::CaseSensitive);
+	DotProTplContent = DotProTplContent.Replace(*FString("%ue_engine_path%"), *EnginePath, ESearchCase::CaseSensitive);
 
 	// write new .pro.user.shared file
-	FString ProUserSharedFilePath = FPaths::Combine(
+	FString DotProUserSharedFilePath = FPaths::Combine(
 			SolutionPath,
 			FString(SOLUTION_SUBPATH),
-			FString(ProjectName).Append(".pro.user.shared.test") // TODO: remove .test
+			FString(ProjectName).Append(TEXT(".pro.user.shared"))
 	);
-	FFileHelper::SaveStringToFile(TplFileAsString, *ProUserSharedFilePath);
+	FFileHelper::SaveStringToFile(DotProTplContent, *DotProUserSharedFilePath);
 }
