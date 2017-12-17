@@ -13,6 +13,7 @@ Source code accessor plugin for Unreal Editor 4, windows version. It allows to m
 
 ## Qt Creator Project files
 ... are generated automatically from Unreal Editor project:
+
 5. Either from File menu click "Open Qt Creator 4.x" or double click any C++ class in the Content browser.
 
 From now on you can create C++ classes and compile your project directly from Unreal Editor. Happy coding!
