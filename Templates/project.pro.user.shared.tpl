@@ -53,7 +53,7 @@
   <valuemap type="QVariantMap">
    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">UnrealEngine4</value>
    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">UnrealEngine4</value>
-   <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">{4534b3ae-bebe-4a6c-89c5-a3bf80601743}</value>
+   <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">{e87ab1f2-da2f-4024-b769-c761f7c03698}</value>
    <value type="int" key="ProjectExplorer.Target.ActiveBuildConfiguration">0</value>
    <value type="int" key="ProjectExplorer.Target.ActiveDeployConfiguration">0</value>
    <value type="int" key="ProjectExplorer.Target.ActiveRunConfiguration">1</value>
