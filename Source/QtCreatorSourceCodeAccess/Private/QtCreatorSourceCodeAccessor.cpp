@@ -1,7 +1,7 @@
 // Implementation of ISourceCodeAccessor
 #include "QtCreatorSourceCodeAccessor.h"
 #include "DesktopPlatformModule.h"
-#include "FileManagerGeneric.h"
+#include "Runtime/Core/Public/HAL/FileManagerGeneric.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "Windows/WindowsHWrapper.h"

@@ -1,6 +1,6 @@
 #include "QtCreatorSourceCodeAccessProjectInitializer.h"
 #include "DesktopPlatformModule.h"
-#include "FileManagerGeneric.h"
+#include "Runtime/Core/Public/HAL/FileManagerGeneric.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "Interfaces/IPluginManager.h"

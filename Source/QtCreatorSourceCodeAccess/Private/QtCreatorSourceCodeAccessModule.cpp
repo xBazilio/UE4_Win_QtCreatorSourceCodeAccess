@@ -1,5 +1,5 @@
 #include "QtCreatorSourceCodeAccessModule.h"
-#include "ModuleManager.h"
+#include "Modules/ModuleManager.h"
 #include "Features/IModularFeatures.h"
 
 IMPLEMENT_MODULE(FQtCreatorSourceCodeAccessModule, QtCreatorSourceCodeAccess)
