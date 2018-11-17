@@ -1,7 +1,7 @@
 {
 	"FileVersion": 3,
 	"Version": 3,
-	"VersionName": "3.3",
+	"VersionName": "3.4",
 	"FriendlyName": "Qt Creator Source Code Access",
 	"Description": "Allows access to source code in Qt Creator.",
 	"Category": "Programming",
@@ -9,7 +9,7 @@
 	"CreatedByURL": "https://github.com/xBazilio/QtCreatorWinSourceCodeAccess",
 	"DocsURL": "",
 	"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/f24d20bbb84549479511d7c30c753f90",
-	"EngineVersion" : "4.20.0",
+	"EngineVersion" : "4.21.0",
 	"SupportURL": "",
 	"CanContainContent": false,
 	"IsBetaVersion": false,
